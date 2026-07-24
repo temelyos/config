@@ -1,4 +1,4 @@
-# @secure-data-systems/eslint-config
+# @temelyos/eslint-config
 
 > 🔐 Official ESLint config for SecureDataSystems projects
 
@@ -9,5 +9,5 @@ This package provides a base ESLint configuration designed for consistency, secu
 Using **npm**:
 
 ```bash
-npm add -D eslint @secure-data-systems/eslint-config
+npm add -D eslint @temelyos/eslint-config
 ```

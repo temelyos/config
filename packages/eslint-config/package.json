@@ -1,5 +1,5 @@
 {
-	"name": "@secure-data-systems/eslint-config",
+	"name": "@temelyos/eslint-config",
 	"version": "1.0.38",
 	"license": "MIT",
 	"repository": {
@@ -39,7 +39,7 @@
 		"@eslint/eslintrc": "catalog:eslint",
 		"@eslint/js": "catalog:eslint",
 		"@stylistic/eslint-plugin": "catalog:eslint",
-		"@secure-data-systems/tsconfig": "workspace:^",
+		"@temelyos/tsconfig": "workspace:^",
 		"eslint": "catalog:eslint",
 		"eslint-plugin-import": "catalog:eslint",
 		"eslint-plugin-perfectionist": "catalog:eslint",

@@ -1,4 +1,4 @@
-# @secure-data-systems/config
+# @temelyos/config
 
 > 🛠 Unified configuration package for all SecureDataSystems projects
 

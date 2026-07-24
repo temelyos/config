@@ -79,12 +79,12 @@ importers:
       '@eslint/js':
         specifier: catalog:eslint
         version: 9.39.5
-      '@secure-data-systems/tsconfig':
-        specifier: workspace:^
-        version: link:../tsconfig
       '@stylistic/eslint-plugin':
         specifier: catalog:eslint
         version: 5.10.0(eslint@9.39.5)
+      '@temelyos/tsconfig':
+        specifier: workspace:^
+        version: link:../tsconfig
       eslint:
         specifier: catalog:eslint
         version: 9.39.5
