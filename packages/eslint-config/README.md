@@ -1,13 +1,13 @@
-# @secure-data-systems/eslint-config
+# @temelyos/eslint-config
 
-> 🔐 Official ESLint config for SecureDataSystems projects
+> 🔐 Official ESLint config for Temelyos projects
 
-This package provides a base ESLint configuration designed for consistency, security, and modern JavaScript/TypeScript development across all SecureDataSystems projects.
+This package provides a base ESLint configuration designed for consistency, security, and modern JavaScript/TypeScript development across all Temelyos projects.
 
 ## 📦 Installation
 
 Using **npm**:
 
 ```bash
-npm add -D eslint @secure-data-systems/eslint-config
+npm add -D eslint @temelyos/eslint-config
 ```
