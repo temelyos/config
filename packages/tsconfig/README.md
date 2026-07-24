@@ -1,8 +1,8 @@
 # @temelyos/tsconfig
 
-> 🔐 Official TypeScript configuration for SecureDataSystems projects
+> 🔐 Official TypeScript configuration for Temelyos projects
 
-This package provides a shareable `tsconfig.json` base configuration to standardize TypeScript settings across all SecureDataSystems projects.
+This package provides a shareable `tsconfig.json` base configuration to standardize TypeScript settings across all Temelyos projects.
 
 ## ✅ Features
 
