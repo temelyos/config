@@ -234,7 +234,7 @@ export default {
 					'@typescript-eslint/no-explicit-any': ['off'],
 					'@typescript-eslint/no-restricted-types': 'warn',
 					'@typescript-eslint/no-unused-vars': [
-						'warn',
+						'error',
 						{
 							caughtErrors: 'none',
 							ignoreRestSiblings: true,
