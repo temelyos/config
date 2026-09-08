@@ -2,21 +2,21 @@ packages:
   - 'packages/*'
 
 catalog:
-  tsx:  ^4.23.1
-  turbo: ^2.10.6
+  tsx:  ^4.23.13
+  turbo: ^2.10.12
   typescript: npm:@typescript/typescript6@^6.0.2
   typescript-native: npm:typescript@^7.0.2
 
 catalogs:
   eslint:
-    "@eslint/eslintrc": 3.3.6
+    "@eslint/eslintrc": 3.3.7
     "@eslint/js": ^9.39.5
     "@stylistic/eslint-plugin": ^5.10.0
     eslint-plugin-import: ^2.32.0
-    eslint-plugin-perfectionist: ^5.10.0
+    eslint-plugin-perfectionist: ^5.11.0
     eslint-plugin-react: 7.37.5
-    globals: ^17.7.0
-    typescript-eslint: ^8.65.0
+    globals: ^17.12.0
+    typescript-eslint: ^8.70.0
     eslint: ^9.39.5
 
   minimist:
@@ -24,4 +24,4 @@ catalogs:
     minimist: ^1.2.8
 
   node:
-    "@types/node": ^26.1.1
+    "@types/node": ^26.5.0
