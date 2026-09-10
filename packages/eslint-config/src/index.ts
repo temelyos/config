@@ -239,9 +239,9 @@ export default {
 							caughtErrors: 'none',
 							ignoreRestSiblings: true,
 
-							varsIgnorePattern: '^_$',
-							argsIgnorePattern: '^_$',
-							caughtErrorsIgnorePattern: '^_$'
+							varsIgnorePattern: '^_',
+							argsIgnorePattern: '^_',
+							caughtErrorsIgnorePattern: '^_'
 						}
 					],
 					"@typescript-eslint/no-unnecessary-condition": ["error", { allowConstantLoopConditions: 'only-allowed-literals' } ]
