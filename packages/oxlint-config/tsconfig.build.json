@@ -6,7 +6,6 @@
 		"module": "nodenext",
 		"outDir": "dist",
 		"rootDir": "src",
-		// typescript-eslint's declarations import TS6's compiler API, which `typescript` (TS7) does not ship
 		"skipLibCheck": true
 	}
 }
