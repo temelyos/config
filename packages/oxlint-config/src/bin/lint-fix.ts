@@ -8,9 +8,6 @@ import path from 'node:path';
 // oxlint applies one pass of fixes and skips any that overlap, where ESLint repeats up to ten
 // times; run it until the files stop changing, so the fix lands everything ESLint's would.
 const MAX_PASSES = 10;
-// ESLint never lints these; oxlint only skips what .gitignore does, so outside a git checkout a
-// fix would rewrite the installed dependencies. A shared config cannot add them: oxlint only reads
-// `ignorePatterns` from the root config.
 const ARGS = ['--ignore-pattern=**/node_modules/**', '--ignore-pattern=.git/**', ...process.argv.slice(2)];
 const skippedDirectories = new Set(['.git', 'dist', 'node_modules']);
 
