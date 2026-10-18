@@ -13,10 +13,7 @@ catalogs:
       specifier: ^2.10.12
       version: 2.10.12
     typescript:
-      specifier: npm:@typescript/typescript6@^6.0.2
-      version: 6.0.2
-    typescript-native:
-      specifier: npm:typescript@^7.0.2
+      specifier: ^7.0.2
       version: 7.0.2
   eslint:
     '@eslint/js':
@@ -57,6 +54,10 @@ catalogs:
     oxlint-tsgolint:
       specifier: ^7.0.2004
       version: 7.0.2004
+  typescript6:
+    typescript:
+      specifier: npm:@typescript/typescript6@^6.0.2
+      version: 6.0.2
 
 importers:
 
@@ -82,10 +83,7 @@ importers:
         version: 2.10.12
       typescript:
         specifier: 'catalog:'
-        version: '@typescript/typescript6@6.0.2'
-      typescript-native:
-        specifier: 'catalog:'
-        version: typescript@7.0.2
+        version: 7.0.2
 
   packages/eslint-config:
     dependencies:
@@ -118,7 +116,7 @@ importers:
         version: 8.70.0(@typescript/typescript6@6.0.2)(eslint@9.39.5)
     devDependencies:
       typescript:
-        specifier: 'catalog:'
+        specifier: catalog:typescript6
         version: '@typescript/typescript6@6.0.2'
 
   packages/oxlint-config:
@@ -142,9 +140,9 @@ importers:
       oxlint:
         specifier: catalog:oxlint
         version: 1.88.0(oxlint-tsgolint@7.0.2004)
-      typescript-native:
+      typescript:
         specifier: 'catalog:'
-        version: typescript@7.0.2
+        version: 7.0.2
 
   packages/tsconfig: {}
 

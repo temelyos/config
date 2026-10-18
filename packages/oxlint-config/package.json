@@ -32,7 +32,7 @@
 	"devDependencies": {
 		"@oxlint/plugins": "catalog:oxlint",
 		"oxlint": "catalog:oxlint",
-		"typescript-native": "catalog:"
+		"typescript": "catalog:"
 	},
 	"dependencies": {
 		"@stylistic/eslint-plugin": "catalog:eslint",

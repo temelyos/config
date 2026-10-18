@@ -35,7 +35,7 @@
 		"lint:fix": "node ../../scripts/lint-fix.mjs -c ../../oxlint.config.mts"
 	},
 	"devDependencies": {
-		"typescript": "catalog:"
+		"typescript": "catalog:typescript6"
 	},
 	"dependencies": {
 		"@eslint/js": "catalog:eslint",

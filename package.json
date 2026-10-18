@@ -23,7 +23,6 @@
 		"oxlint-tsgolint": "catalog:oxlint",
 		"tsx": "catalog:",
 		"turbo": "catalog:",
-		"typescript": "catalog:",
-		"typescript-native": "catalog:"
+		"typescript": "catalog:"
 	}
 }
