@@ -6,19 +6,24 @@ import type { TypeKind } from './infer-type.js';
 import {
 	isMetaSelector,
 	isMethodOrPropertySelector,
-	META_SELECTORS,
 	type MetaSelectorName,
-	MODIFIERS,
+	MetaSelectors,
 	type ModifierName,
-	SELECTORS,
-	SELECTORS_ALLOWED_TO_HAVE_TYPES,
+	Modifiers,
 	type SelectorName,
-	TYPE_MODIFIERS,
+	Selectors,
+	SELECTORS_ALLOWED_TO_HAVE_TYPES,
 	type TypeModifierName,
+	TypeModifiers,
 	UNDERSCORE_OPTIONS,
 	type UnderscoreOption
 } from './enums.js';
-import { FORMAT_CHECKS, type FormatName } from './format.js';
+import { FormatChecks, type FormatName } from './format.js';
+
+interface Failure {
+	data: Record<string, string | undefined>,
+	messageId: string
+}
 
 interface MatchRegex {
 	match: boolean,
@@ -33,35 +38,30 @@ export interface NamingOption {
 	leadingUnderscore?: UnderscoreOption,
 	modifiers?: ModifierName[],
 	prefix?: string[],
-	selector: (MetaSelectorName | SelectorName) | (MetaSelectorName | SelectorName)[],
+	selector: (MetaSelectorName | SelectorName)[] | (MetaSelectorName | SelectorName),
 	suffix?: string[],
 	trailingUnderscore?: UnderscoreOption,
 	types?: TypeModifierName[]
 }
 
 interface NormalizedOption {
-	custom: { match: boolean, regex: RegExp } | null,
-	filter: { match: boolean, regex: RegExp } | null,
+	custom: null | { match: boolean, regex: RegExp },
+	filter: null | { match: boolean, regex: RegExp },
 	format: FormatName[] | null,
-	leadingUnderscore: UnderscoreOption | null,
-	modifiers: number[] | null,
+	leadingUnderscore: null | UnderscoreOption,
+	modifiers: null | number[],
 	modifierWeight: number,
-	prefix: string[] | null,
+	prefix: null | string[],
 	selector: number,
-	suffix: string[] | null,
-	trailingUnderscore: UnderscoreOption | null,
-	types: TypeModifierName[] | null
-}
-
-interface Failure {
-	data: Record<string, string | undefined>,
-	messageId: string
+	suffix: null | string[],
+	trailingUnderscore: null | UnderscoreOption,
+	types: null | TypeModifierName[]
 }
 
 /** Validates one name; `inferType` is only called when a config with `types` is reached. */
 export type Validator = (node: AstNode, modifiers: Set<number>, inferType?: () => TypeKind | undefined) => void;
 
-export const MESSAGES = {
+export const Messages = {
 	doesNotMatchFormat: '{{type}} name `{{name}}` must match one of the following formats: {{formats}}',
 	doesNotMatchFormatTrimmed: '{{type}} name `{{name}}` trimmed as `{{processedName}}` must match one of the following formats: {{formats}}',
 	missingAffix: '{{type}} name `{{name}}` must have one of the following {{position}}es: {{affixes}}',
@@ -70,102 +70,30 @@ export const MESSAGES = {
 	unexpectedUnderscore: '{{type}} name `{{name}}` must not have a {{position}} underscore.'
 };
 
-function lookup<T extends Record<string, unknown>>(table: T, key: string, kind: string): T[keyof T] {
-	if (!Object.hasOwn(table, key)) throw new Error(`@temelyos/naming-convention: unknown ${kind} "${key}"`);
-
-	return table[key as keyof T];
-}
-
-function normalizeOption(option: NamingOption): NormalizedOption[] {
-	let weight = 0;
-
-	option.modifiers?.forEach(modifier => { weight |= lookup(MODIFIERS, modifier, 'modifier'); });
-	option.types?.forEach(type => { weight |= lookup(TYPE_MODIFIERS, type, 'type'); });
-	// give selectors with a filter the _highest_ priority
-	if (option.filter) weight |= 1 << 30;
-
-	option.format?.forEach(format => lookup(FORMAT_CHECKS, format, 'format'));
-	for (const underscore of [option.leadingUnderscore, option.trailingUnderscore]) {
-		if (underscore != null && !UNDERSCORE_OPTIONS.includes(underscore)) throw new Error(`@temelyos/naming-convention: unknown underscore option "${underscore}"`);
-	}
-
-	const normalized: Omit<NormalizedOption, 'selector'> = {
-		custom: option.custom ? { match: option.custom.match, regex: new RegExp(option.custom.regex, 'u') } : null,
-		filter: option.filter == null
-			? null
-			: typeof option.filter === 'string'
-				? { match: true, regex: new RegExp(option.filter, 'u') }
-				: { match: option.filter.match, regex: new RegExp(option.filter.regex, 'u') },
-		format: option.format ?? null,
-		leadingUnderscore: option.leadingUnderscore ?? null,
-		modifiers: option.modifiers?.map(modifier => MODIFIERS[modifier]) ?? null,
-		modifierWeight: weight,
-		prefix: option.prefix?.length ? option.prefix : null,
-		suffix: option.suffix?.length ? option.suffix : null,
-		trailingUnderscore: option.trailingUnderscore ?? null,
-		types: option.types ?? null
-	};
-
-	const selectors = Array.isArray(option.selector) ? option.selector : [option.selector];
-
-	return selectors.map(selector => ({
-		...normalized,
-		selector: Object.hasOwn(META_SELECTORS, selector)
-			? META_SELECTORS[selector as MetaSelectorName]
-			: lookup(SELECTORS, selector, 'selector')
-	}));
-}
-
-function selectorTypeToMessageString(selectorType: string) {
-	const notCamelCase = selectorType.replaceAll(/([A-Z])/g, ' $1');
-
-	return notCamelCase.charAt(0).toUpperCase() + notCamelCase.slice(1);
-}
-
-/**
- * Whether the inferred type satisfies the config's `types`. typescript-eslint asks the type
- * checker; this has only syntax, so an unknown type is `maybe`, never a guess either way.
- */
-function matchesType(config: NormalizedOption, selectorType: number, inferType?: () => TypeKind | undefined): 'maybe' | 'no' | 'yes' {
-	if (config.types == null || (SELECTORS_ALLOWED_TO_HAVE_TYPES & selectorType) === 0) return 'yes';
-
-	const kind = inferType?.();
-
-	if (kind === undefined) return 'maybe';
-
-	return (config.types as string[]).includes(kind) ? 'yes' : 'no';
-}
-
-export function createValidators(context: Context, options: NamingOption[]): Record<SelectorName, Validator> {
-	const normalized = options.flatMap(normalizeOption);
-
-	return Object.fromEntries((Object.keys(SELECTORS) as SelectorName[]).map(type => [type, createValidator(type, context, normalized)])) as Record<SelectorName, Validator>;
-}
-
 function createValidator(type: SelectorName, context: Context, allConfigs: NormalizedOption[]): Validator {
 	// make sure the "highest priority" configs are checked first
-	const selectorType = SELECTORS[type];
+	const selectorType = Selectors[type];
 	const configs = allConfigs
-		.filter(c => (c.selector & selectorType) !== 0 || c.selector === META_SELECTORS.default)
+		.filter(c => (c.selector & selectorType) !== 0 || c.selector === MetaSelectors.default)
 		.sort((a, b) => {
 			if (a.selector === b.selector) {
 				// sort descending - the type modifiers are "more important"
 				return b.modifierWeight - a.modifierWeight;
 			}
 
-			const aIsMeta = isMetaSelector(a.selector);
-			const bIsMeta = isMetaSelector(b.selector);
+			const isAMeta = isMetaSelector(a.selector);
+			const isBMeta = isMetaSelector(b.selector);
 
 			// non-meta selectors should go ahead of meta selectors
-			if (aIsMeta && !bIsMeta) return 1;
-			if (!aIsMeta && bIsMeta) return -1;
+			if (isAMeta && !isBMeta) return 1;
+			if (!isAMeta && isBMeta) return -1;
 
-			const aIsMethodOrProperty = isMethodOrPropertySelector(a.selector);
-			const bIsMethodOrProperty = isMethodOrPropertySelector(b.selector);
+			const isAMethodOrProperty = isMethodOrPropertySelector(a.selector);
+			const isBMethodOrProperty = isMethodOrPropertySelector(b.selector);
 
 			// for backward compatibility, method and property have higher precedence than other meta selectors
-			if (aIsMethodOrProperty && !bIsMethodOrProperty) return -1;
-			if (!aIsMethodOrProperty && bIsMethodOrProperty) return 1;
+			if (isAMethodOrProperty && !isBMethodOrProperty) return -1;
+			if (!isAMethodOrProperty && isBMethodOrProperty) return 1;
 
 			// sort descending - the meta selectors are "least important"
 			return b.selector - a.selector;
@@ -275,7 +203,7 @@ function createValidator(type: SelectorName, context: Context, allConfigs: Norma
 		const formats = config.format;
 
 		if (!formats?.length) return undefined;
-		if (!modifiers.has(MODIFIERS.requiresQuotes) && formats.some(format => FORMAT_CHECKS[format](name))) return undefined;
+		if (!modifiers.has(Modifiers.requiresQuotes) && formats.some(format => FormatChecks[format](name))) return undefined;
 
 		return report(originalName === name ? 'doesNotMatchFormat' : 'doesNotMatchFormatTrimmed', {
 			formats: formats.join(', '),
@@ -283,4 +211,76 @@ function createValidator(type: SelectorName, context: Context, allConfigs: Norma
 			processedName: name
 		});
 	}
+}
+
+export function createValidators(context: Context, options: NamingOption[]): Record<SelectorName, Validator> {
+	const normalized = options.flatMap(normalizeOption);
+
+	return Object.fromEntries((Object.keys(Selectors) as SelectorName[]).map(type => [type, createValidator(type, context, normalized)])) as Record<SelectorName, Validator>;
+}
+
+function lookup<T extends Record<string, unknown>>(table: T, key: string, kind: string): T[keyof T] {
+	if (!Object.hasOwn(table, key)) throw new Error(`@temelyos/naming-convention: unknown ${kind} "${key}"`);
+
+	return table[key as keyof T];
+}
+
+/**
+ * Whether the inferred type satisfies the config's `types`. typescript-eslint asks the type
+ * checker; this has only syntax, so an unknown type is `maybe`, never a guess either way.
+ */
+function matchesType(config: NormalizedOption, selectorType: number, inferType?: () => TypeKind | undefined): 'maybe' | 'no' | 'yes' {
+	if (config.types == null || (SELECTORS_ALLOWED_TO_HAVE_TYPES & selectorType) === 0) return 'yes';
+
+	const kind = inferType?.();
+
+	if (kind === undefined) return 'maybe';
+
+	return (config.types as string[]).includes(kind) ? 'yes' : 'no';
+}
+
+function normalizeOption(option: NamingOption): NormalizedOption[] {
+	let weight = 0;
+
+	for (const modifier of option.modifiers ?? []) weight |= lookup(Modifiers, modifier, 'modifier');
+	for (const type of option.types ?? []) weight |= lookup(TypeModifiers, type, 'type');
+	// give selectors with a filter the _highest_ priority
+	if (option.filter) weight |= 1 << 30;
+
+	option.format?.forEach(format => lookup(FormatChecks, format, 'format'));
+	for (const underscore of [option.leadingUnderscore, option.trailingUnderscore]) {
+		if (underscore != null && !UNDERSCORE_OPTIONS.includes(underscore)) throw new Error(`@temelyos/naming-convention: unknown underscore option "${underscore}"`);
+	}
+
+	const normalized: Omit<NormalizedOption, 'selector'> = {
+		custom: option.custom ? { match: option.custom.match, regex: new RegExp(option.custom.regex, 'u') } : null,
+		filter: option.filter == null
+			? null
+			: typeof option.filter === 'string'
+				? { match: true, regex: new RegExp(option.filter, 'u') }
+				: { match: option.filter.match, regex: new RegExp(option.filter.regex, 'u') },
+		format: option.format ?? null,
+		leadingUnderscore: option.leadingUnderscore ?? null,
+		modifiers: option.modifiers?.map(modifier => Modifiers[modifier]) ?? null,
+		modifierWeight: weight,
+		prefix: option.prefix?.length ? option.prefix : null,
+		suffix: option.suffix?.length ? option.suffix : null,
+		trailingUnderscore: option.trailingUnderscore ?? null,
+		types: option.types ?? null
+	};
+
+	const selectors = Array.isArray(option.selector) ? option.selector : [option.selector];
+
+	return selectors.map(selector => ({
+		...normalized,
+		selector: Object.hasOwn(MetaSelectors, selector)
+			? MetaSelectors[selector as MetaSelectorName]
+			: lookup(Selectors, selector, 'selector')
+	}));
+}
+
+function selectorTypeToMessageString(selectorType: string) {
+	const notCamelCase = selectorType.replaceAll(/([A-Z])/g, ' $1');
+
+	return notCamelCase.charAt(0).toUpperCase() + notCamelCase.slice(1);
 }

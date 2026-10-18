@@ -1,9 +1,9 @@
 import type { Context, Rule, Scope } from '@oxlint/plugins';
 
 import { type AstNode, getIdentifiersFromPattern, getOuterScope, getScope } from './ast.js';
-import { MODIFIERS } from './enums.js';
+import { Modifiers } from './enums.js';
 import { createTypeInference } from './infer-type.js';
-import { createValidators, MESSAGES, type NamingOption, type Validator } from './validator.js';
+import { createValidators, Messages, type NamingOption, type Validator } from './validator.js';
 
 const DEFAULT_OPTIONS: NamingOption[] = [
 	{ format: ['camelCase'], leadingUnderscore: 'allow', selector: 'default', trailingUnderscore: 'allow' },
@@ -12,18 +12,34 @@ const DEFAULT_OPTIONS: NamingOption[] = [
 	{ format: ['PascalCase'], selector: 'typeLike' }
 ];
 
-const FUNCTION_VALUES = new Set(['ArrowFunctionExpression', 'FunctionExpression', 'TSEmptyBodyFunctionExpression']);
-const IDENTIFIER = /^[\p{ID_Start}$_][\p{ID_Continue}$‌‍]*$/u;
+const functionValues = new Set(['ArrowFunctionExpression', 'FunctionExpression', 'TSEmptyBodyFunctionExpression']);
+const identifierPattern = /^[\p{ID_Start}$_][\p{ID_Continue}$\u200C\u200D]*$/u;
 
-function keyName(key: AstNode): string {
-	return key.type === 'Identifier' || key.type === 'PrivateIdentifier' ? key.name : `${key.value}`;
+function getMemberModifiers(node: AstNode) {
+	const modifiers = new Set<number>();
+
+	if (node.key?.type === 'PrivateIdentifier') {
+		modifiers.add(Modifiers['#private']);
+	} else if (node.accessibility) {
+		modifiers.add(Modifiers[node.accessibility as 'private' | 'protected' | 'public']);
+	} else {
+		modifiers.add(Modifiers.public);
+	}
+
+	if (node.static) modifiers.add(Modifiers.static);
+	if (node.readonly) modifiers.add(Modifiers.readonly);
+	if (node.override) modifiers.add(Modifiers.override);
+	if (node.type.startsWith('TSAbstract')) modifiers.add(Modifiers.abstract);
+
+	return modifiers;
 }
 
-function isGlobal(scope: Scope | null) {
-	return scope?.type === 'global' || scope?.type === 'module';
+function isDestructured(id: AstNode) {
+	return (id.parent?.type === 'Property' && id.parent.shorthand)
+		|| (id.parent?.type === 'AssignmentPattern' && id.parent.parent?.type === 'Property' && id.parent.parent.shorthand);
 }
 
-function isExported(node: AstNode | null | undefined, name: string, scope: Scope | null) {
+function isExported(node: AstNode | null | undefined, name: string, scope: null | Scope) {
 	if (node?.parent?.type === 'ExportDefaultDeclaration' || node?.parent?.type === 'ExportNamedDeclaration') return true;
 
 	for (const ref of scope?.set.get(name)?.references ?? []) {
@@ -35,46 +51,22 @@ function isExported(node: AstNode | null | undefined, name: string, scope: Scope
 	return false;
 }
 
-function isDestructured(id: AstNode) {
-	return (id.parent?.type === 'Property' && id.parent.shorthand)
-		|| (id.parent?.type === 'AssignmentPattern' && id.parent.parent?.type === 'Property' && id.parent.parent.shorthand);
+function isGlobal(scope: null | Scope) {
+	return scope?.type === 'global' || scope?.type === 'module';
 }
 
-function getMemberModifiers(node: AstNode) {
-	const modifiers = new Set<number>();
-
-	if (node.key?.type === 'PrivateIdentifier') {
-		modifiers.add(MODIFIERS['#private']);
-	} else if (node.accessibility) {
-		modifiers.add(MODIFIERS[node.accessibility as 'private' | 'protected' | 'public']);
-	} else {
-		modifiers.add(MODIFIERS.public);
-	}
-
-	if (node.static) modifiers.add(MODIFIERS.static);
-	if (node.readonly) modifiers.add(MODIFIERS.readonly);
-	if (node.override) modifiers.add(MODIFIERS.override);
-	if (node.type.startsWith('TSAbstract')) modifiers.add(MODIFIERS.abstract);
-
-	return modifiers;
+function keyName(key: AstNode): string {
+	return key.type === 'Identifier' || key.type === 'PrivateIdentifier' ? key.name : `${key.value}`;
 }
 
-export const namingConvention: Rule = {
-	meta: {
-		docs: {
-			description: 'Enforce naming conventions for everything across a codebase (typescript-eslint\'s rule, with types inferred from syntax)'
-		},
-		messages: MESSAGES,
-		schema: { items: { type: 'object' }, type: 'array' },
-		type: 'suggestion'
-	},
+export const NamingConvention: Rule = {
 	create(context: Context) {
 		const options = context.options.length ? context.options as unknown as NamingOption[] : DEFAULT_OPTIONS;
 		const validators = createValidators(context, options);
 		const { inferDeclaredType, inferMemberType } = createTypeInference(context);
 
 		/** typescript-eslint counts reads; an exported name is used. */
-		function isUnused(name: string, scope: Scope | null, node?: AstNode | null) {
+		function isUnused(name: string, scope: null | Scope, node?: AstNode | null) {
 			let variable = null;
 
 			for (let current = scope; current && !variable; current = current.upper) variable = current.set.get(name) ?? null;
@@ -87,7 +79,7 @@ export const namingConvention: Rule = {
 		function handleMember(validator: Validator, node: AstNode, modifiers: Set<number>, typed = false) {
 			const key = node.key;
 
-			if (!IDENTIFIER.test(keyName(key))) modifiers.add(MODIFIERS.requiresQuotes);
+			if (!identifierPattern.test(keyName(key))) modifiers.add(Modifiers.requiresQuotes);
 
 			validator(key, modifiers, typed ? () => inferMemberType(node) : undefined);
 		}
@@ -98,10 +90,10 @@ export const namingConvention: Rule = {
 			const modifiers = new Set<number>();
 			const scope = getOuterScope(context, node);
 
-			if (isGlobal(scope)) modifiers.add(MODIFIERS.global);
-			if (isExported(node, node.id.name, scope)) modifiers.add(MODIFIERS.exported);
-			if (isUnused(node.id.name, scope, node)) modifiers.add(MODIFIERS.unused);
-			if (node.async) modifiers.add(MODIFIERS.async);
+			if (isGlobal(scope)) modifiers.add(Modifiers.global);
+			if (isExported(node, node.id.name, scope)) modifiers.add(Modifiers.exported);
+			if (isUnused(node.id.name, scope, node)) modifiers.add(Modifiers.unused);
+			if (node.async) modifiers.add(Modifiers.async);
 
 			validators.function(node.id, modifiers);
 		}
@@ -113,8 +105,8 @@ export const namingConvention: Rule = {
 				for (const id of getIdentifiersFromPattern(param)) {
 					const modifiers = new Set<number>();
 
-					if (isDestructured(id)) modifiers.add(MODIFIERS.destructured);
-					if (isUnused(id.name, getScope(context, id))) modifiers.add(MODIFIERS.unused);
+					if (isDestructured(id)) modifiers.add(Modifiers.destructured);
+					if (isUnused(id.name, getScope(context, id))) modifiers.add(Modifiers.unused);
 
 					validators.parameter(id, modifiers, () => inferDeclaredType(id));
 				}
@@ -124,10 +116,10 @@ export const namingConvention: Rule = {
 		function handleClassProperty(node: AstNode) {
 			if (node.computed) return;
 
-			if (FUNCTION_VALUES.has(node.value?.type)) {
+			if (functionValues.has(node.value?.type)) {
 				const modifiers = getMemberModifiers(node);
 
-				if (node.value.async) modifiers.add(MODIFIERS.async);
+				if (node.value.async) modifiers.add(Modifiers.async);
 
 				handleMember(validators.classMethod, node, modifiers);
 			} else {
@@ -141,7 +133,7 @@ export const namingConvention: Rule = {
 			if (node.kind === 'method') {
 				const modifiers = getMemberModifiers(node);
 
-				if (node.value?.async) modifiers.add(MODIFIERS.async);
+				if (node.value?.async) modifiers.add(Modifiers.async);
 
 				handleMember(validators.classMethod, node, modifiers);
 			} else if (node.kind === 'get' || node.kind === 'set') {
@@ -153,9 +145,9 @@ export const namingConvention: Rule = {
 			const modifiers = new Set<number>();
 			const scope = outer ? getOuterScope(context, node) : getScope(context, node);
 
-			if (node.abstract) modifiers.add(MODIFIERS.abstract);
-			if (isExported(node, node.id.name, scope)) modifiers.add(MODIFIERS.exported);
-			if (isUnused(node.id.name, scope, node)) modifiers.add(MODIFIERS.unused);
+			if (node.abstract) modifiers.add(Modifiers.abstract);
+			if (isExported(node, node.id.name, scope)) modifiers.add(Modifiers.exported);
+			if (isUnused(node.id.name, scope, node)) modifiers.add(Modifiers.unused);
 
 			validator(node.id, modifiers);
 		}
@@ -174,13 +166,13 @@ export const namingConvention: Rule = {
 			const modifiers = new Set<number>();
 
 			if (node.type === 'ImportDefaultSpecifier') {
-				modifiers.add(MODIFIERS.default);
+				modifiers.add(Modifiers.default);
 			} else if (node.type === 'ImportNamespaceSpecifier') {
-				modifiers.add(MODIFIERS.namespace);
+				modifiers.add(Modifiers.namespace);
 			} else {
 				if (node.imported.type === 'Identifier' && node.imported.name !== 'default') return;
 
-				modifiers.add(MODIFIERS.default);
+				modifiers.add(Modifiers.default);
 			}
 
 			validators.import(node.local, modifiers);
@@ -201,15 +193,15 @@ export const namingConvention: Rule = {
 				if (node.computed) return;
 
 				if (node.kind === 'get' || node.kind === 'set') {
-					handleMember(validators.classicAccessor, node, new Set([MODIFIERS.public]), true);
-				} else if (FUNCTION_VALUES.has(node.value?.type)) {
-					const modifiers = new Set<number>([MODIFIERS.public]);
+					handleMember(validators.classicAccessor, node, new Set([Modifiers.public]), true);
+				} else if (functionValues.has(node.value?.type)) {
+					const modifiers = new Set<number>([Modifiers.public]);
 
-					if (node.value.async) modifiers.add(MODIFIERS.async);
+					if (node.value.async) modifiers.add(Modifiers.async);
 
 					handleMember(validators.objectLiteralMethod, node, modifiers);
 				} else if (node.parent?.type !== 'ObjectPattern') {
-					handleMember(validators.objectLiteralProperty, node, new Set([MODIFIERS.public]), true);
+					handleMember(validators.objectLiteralProperty, node, new Set([Modifiers.public]), true);
 				}
 			},
 			PropertyDefinition: handleClassProperty,
@@ -222,13 +214,13 @@ export const namingConvention: Rule = {
 			TSEnumMember(node: AstNode) {
 				const modifiers = new Set<number>();
 
-				if (!IDENTIFIER.test(keyName(node.id))) modifiers.add(MODIFIERS.requiresQuotes);
+				if (!identifierPattern.test(keyName(node.id))) modifiers.add(Modifiers.requiresQuotes);
 
 				validators.enumMember(node.id, modifiers);
 			},
 			TSInterfaceDeclaration: (node: AstNode) => handleTypeDeclaration(node, validators.interface, false),
 			TSMethodSignature(node: AstNode) {
-				if (!node.computed) handleMember(validators.typeMethod, node, new Set([MODIFIERS.public]));
+				if (!node.computed) handleMember(validators.typeMethod, node, new Set([Modifiers.public]));
 			},
 			TSParameterProperty(node: AstNode) {
 				const modifiers = getMemberModifiers(node);
@@ -239,11 +231,11 @@ export const namingConvention: Rule = {
 				if (node.computed) return;
 
 				if (node.typeAnnotation?.typeAnnotation?.type === 'TSFunctionType') {
-					handleMember(validators.typeMethod, node, new Set([MODIFIERS.public]));
+					handleMember(validators.typeMethod, node, new Set([Modifiers.public]));
 				} else {
-					const modifiers = new Set<number>([MODIFIERS.public]);
+					const modifiers = new Set<number>([Modifiers.public]);
 
-					if (node.readonly) modifiers.add(MODIFIERS.readonly);
+					if (node.readonly) modifiers.add(Modifiers.readonly);
 
 					handleMember(validators.typeProperty, node, modifiers, true);
 				}
@@ -254,28 +246,36 @@ export const namingConvention: Rule = {
 
 				const modifiers = new Set<number>();
 
-				if (isUnused(node.name.name, getScope(context, node))) modifiers.add(MODIFIERS.unused);
+				if (isUnused(node.name.name, getScope(context, node))) modifiers.add(Modifiers.unused);
 
 				validators.typeParameter(node.name, modifiers);
 			},
 			VariableDeclarator(node: AstNode) {
 				const baseModifiers = new Set<number>();
 
-				if (node.parent?.kind === 'const') baseModifiers.add(MODIFIERS.const);
-				if (isGlobal(getScope(context, node))) baseModifiers.add(MODIFIERS.global);
+				if (node.parent?.kind === 'const') baseModifiers.add(Modifiers.const);
+				if (isGlobal(getScope(context, node))) baseModifiers.add(Modifiers.global);
 
 				for (const id of getIdentifiersFromPattern(node.id)) {
 					const modifiers = new Set(baseModifiers);
 					const scope = getScope(context, id);
 
-					if (isDestructured(id)) modifiers.add(MODIFIERS.destructured);
-					if (isExported(node.parent, id.name, scope)) modifiers.add(MODIFIERS.exported);
-					if (isUnused(id.name, scope, node.parent)) modifiers.add(MODIFIERS.unused);
-					if (id === node.id && node.init?.async) modifiers.add(MODIFIERS.async);
+					if (isDestructured(id)) modifiers.add(Modifiers.destructured);
+					if (isExported(node.parent, id.name, scope)) modifiers.add(Modifiers.exported);
+					if (isUnused(id.name, scope, node.parent)) modifiers.add(Modifiers.unused);
+					if (id === node.id && node.init?.async) modifiers.add(Modifiers.async);
 
 					validators.variable(id, modifiers, () => inferDeclaredType(id));
 				}
 			}
 		} as never;
+	},
+	meta: {
+		docs: {
+			description: 'Enforce naming conventions for everything across a codebase (typescript-eslint\'s rule, with types inferred from syntax)'
+		},
+		messages: Messages,
+		schema: { items: { type: 'object' }, type: 'array' },
+		type: 'suggestion'
 	}
 };

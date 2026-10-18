@@ -1,88 +1,88 @@
 // Ported from typescript-eslint's naming-convention (8.70.0). The bit values order the configs, so
 // they are kept exactly: a filter outranks types, types outrank modifiers.
 
-export const SELECTORS = {
-	// variableLike
-	variable: 1 << 0,
-	function: 1 << 1,
-	parameter: 1 << 2,
-	// memberLike
-	parameterProperty: 1 << 3,
-	classicAccessor: 1 << 4,
-	enumMember: 1 << 5,
-	classMethod: 1 << 6,
-	objectLiteralMethod: 1 << 7,
-	typeMethod: 1 << 8,
-	classProperty: 1 << 9,
-	objectLiteralProperty: 1 << 10,
-	typeProperty: 1 << 11,
+export const Selectors = {
 	autoAccessor: 1 << 12,
 	// typeLike
 	class: 1 << 13,
-	interface: 1 << 14,
-	typeAlias: 1 << 15,
+	classicAccessor: 1 << 4,
+	classMethod: 1 << 6,
+	classProperty: 1 << 9,
 	enum: 1 << 16,
-	typeParameter: 1 << 17,
+	enumMember: 1 << 5,
+	function: 1 << 1,
 	// other
-	import: 1 << 18
+	import: 1 << 18,
+	interface: 1 << 14,
+	objectLiteralMethod: 1 << 7,
+	objectLiteralProperty: 1 << 10,
+	parameter: 1 << 2,
+	// memberLike
+	parameterProperty: 1 << 3,
+	typeAlias: 1 << 15,
+	typeMethod: 1 << 8,
+	typeParameter: 1 << 17,
+	typeProperty: 1 << 11,
+	// variableLike
+	variable: 1 << 0
 } as const;
 
-export const META_SELECTORS = {
+export const MetaSelectors = {
+	accessor: Selectors.classicAccessor | Selectors.autoAccessor,
 	default: -1,
-	variableLike: SELECTORS.variable | SELECTORS.function | SELECTORS.parameter,
-	memberLike: SELECTORS.classProperty | SELECTORS.objectLiteralProperty | SELECTORS.typeProperty | SELECTORS.parameterProperty
-		| SELECTORS.enumMember | SELECTORS.classMethod | SELECTORS.objectLiteralMethod | SELECTORS.typeMethod
-		| SELECTORS.classicAccessor | SELECTORS.autoAccessor,
-	typeLike: SELECTORS.class | SELECTORS.interface | SELECTORS.typeAlias | SELECTORS.enum | SELECTORS.typeParameter,
-	method: SELECTORS.classMethod | SELECTORS.objectLiteralMethod | SELECTORS.typeMethod,
-	property: SELECTORS.classProperty | SELECTORS.objectLiteralProperty | SELECTORS.typeProperty,
-	accessor: SELECTORS.classicAccessor | SELECTORS.autoAccessor
+	memberLike: Selectors.classProperty | Selectors.objectLiteralProperty | Selectors.typeProperty | Selectors.parameterProperty
+		| Selectors.enumMember | Selectors.classMethod | Selectors.objectLiteralMethod | Selectors.typeMethod
+		| Selectors.classicAccessor | Selectors.autoAccessor,
+	method: Selectors.classMethod | Selectors.objectLiteralMethod | Selectors.typeMethod,
+	property: Selectors.classProperty | Selectors.objectLiteralProperty | Selectors.typeProperty,
+	typeLike: Selectors.class | Selectors.interface | Selectors.typeAlias | Selectors.enum | Selectors.typeParameter,
+	variableLike: Selectors.variable | Selectors.function | Selectors.parameter
 } as const;
 
-export const MODIFIERS = {
-	'const': 1 << 0,
-	'readonly': 1 << 1,
-	'static': 1 << 2,
-	'public': 1 << 3,
-	'protected': 1 << 4,
-	'private': 1 << 5,
+export const Modifiers = {
 	'#private': 1 << 6,
 	'abstract': 1 << 7,
-	'destructured': 1 << 8,
-	'global': 1 << 9,
-	'exported': 1 << 10,
-	'unused': 1 << 11,
-	'requiresQuotes': 1 << 12,
-	'override': 1 << 13,
 	'async': 1 << 14,
+	'const': 1 << 0,
 	'default': 1 << 15,
-	'namespace': 1 << 16
+	'destructured': 1 << 8,
+	'exported': 1 << 10,
+	'global': 1 << 9,
+	'namespace': 1 << 16,
+	'override': 1 << 13,
+	'private': 1 << 5,
+	'protected': 1 << 4,
+	'public': 1 << 3,
+	'readonly': 1 << 1,
+	'requiresQuotes': 1 << 12,
+	'static': 1 << 2,
+	'unused': 1 << 11
 } as const;
 
-export const TYPE_MODIFIERS = {
+export const TypeModifiers = {
+	array: 1 << 21,
 	boolean: 1 << 17,
-	string: 1 << 18,
-	number: 1 << 19,
 	function: 1 << 20,
-	array: 1 << 21
+	number: 1 << 19,
+	string: 1 << 18
 } as const;
 
 export const UNDERSCORE_OPTIONS = ['forbid', 'allow', 'require', 'requireDouble', 'allowDouble', 'allowSingleOrDouble'] as const;
 
 /** The selectors whose `types` are checked; for any other selector, `types` always matches. */
-export const SELECTORS_ALLOWED_TO_HAVE_TYPES = SELECTORS.variable | SELECTORS.parameter | SELECTORS.classProperty
-	| SELECTORS.objectLiteralProperty | SELECTORS.typeProperty | SELECTORS.parameterProperty | SELECTORS.classicAccessor;
+export const SELECTORS_ALLOWED_TO_HAVE_TYPES = Selectors.variable | Selectors.parameter | Selectors.classProperty
+	| Selectors.objectLiteralProperty | Selectors.typeProperty | Selectors.parameterProperty | Selectors.classicAccessor;
 
-export type MetaSelectorName = keyof typeof META_SELECTORS;
-export type ModifierName = keyof typeof MODIFIERS;
-export type SelectorName = keyof typeof SELECTORS;
-export type TypeModifierName = keyof typeof TYPE_MODIFIERS;
+export type MetaSelectorName = keyof typeof MetaSelectors;
+export type ModifierName = keyof typeof Modifiers;
+export type SelectorName = keyof typeof Selectors;
+export type TypeModifierName = keyof typeof TypeModifiers;
 export type UnderscoreOption = typeof UNDERSCORE_OPTIONS[number];
 
 export function isMetaSelector(selector: number) {
-	return Object.values(META_SELECTORS).includes(selector as never);
+	return Object.values(MetaSelectors).includes(selector as never);
 }
 
 export function isMethodOrPropertySelector(selector: number) {
-	return selector === META_SELECTORS.method || selector === META_SELECTORS.property;
+	return selector === MetaSelectors.method || selector === MetaSelectors.property;
 }

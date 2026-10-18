@@ -30,13 +30,14 @@
 	],
 	"scripts": {
 		"build": "node ../../scripts/build.mjs && tsc --project tsconfig.build.json",
-		"deploy": "npm run build && node ../../scripts/publish.mjs"
+		"deploy": "npm run build && node ../../scripts/publish.mjs",
+		"lint": "oxlint -c ../../oxlint.config.mts",
+		"lint:fix": "node ../../scripts/lint-fix.mjs -c ../../oxlint.config.mts"
 	},
 	"devDependencies": {
 		"typescript": "catalog:"
 	},
 	"dependencies": {
-		"@eslint/eslintrc": "catalog:eslint",
 		"@eslint/js": "catalog:eslint",
 		"@stylistic/eslint-plugin": "catalog:eslint",
 		"@temelyos/tsconfig": "workspace:^",

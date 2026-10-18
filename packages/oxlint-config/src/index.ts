@@ -124,83 +124,83 @@ function createNamingConventions(isJsx: boolean) {
 	return [
 		'error',
 		{
-			selector: ['function'],
+			format: isJsx ? ['strictCamelCase', 'StrictPascalCase'] : ['strictCamelCase'],
 			modifiers: ['exported'],
-			format: isJsx ? ['strictCamelCase', 'StrictPascalCase'] : ['strictCamelCase']
+			selector: ['function']
 		},
 		{
-			selector: ['variable'],
-			types: ['array', 'boolean', 'number', 'string'],
-			modifiers: ['exported'],
+			filter: { match: false, regex: '^_$' },
 			format: ['UPPER_CASE'],
-			filter: { regex: '^_$', match: false }
+			modifiers: ['exported'],
+			selector: ['variable'],
+			types: ['array', 'boolean', 'number', 'string']
 		},
 		{
-			selector: ['variable'],
-			types: ['array', 'boolean', 'number', 'string'],
+			filter: { match: false, regex: '^_$' },
+			format: ['UPPER_CASE'],
 			modifiers: ['global', 'const'],
-			format: ['UPPER_CASE'],
-			filter: { regex: '^_$', match: false }
+			selector: ['variable'],
+			types: ['array', 'boolean', 'number', 'string']
 		},
 		{
-			selector: ['variable'],
+			filter: { match: false, regex: isJsx ? '^_|(metadata)$' : '^_$' },
+			format: ['StrictPascalCase'],
 			modifiers: ['exported'],
-			format: ['StrictPascalCase'],
-			filter: { regex: isJsx ? '^_|(metadata)$' : '^_$', match: false }
+			selector: ['variable']
 		},
 		{
-			selector: ['variable'],
+			filter: { match: false, regex: '^_$' },
+			format: isJsx ? ['strictCamelCase', 'StrictPascalCase'] : ['strictCamelCase'],
 			modifiers: ['global'],
-			types: ['function'],
-			format: isJsx ? ['strictCamelCase', 'StrictPascalCase'] : ['strictCamelCase'],
-			filter: { regex: '^_$', match: false }
+			selector: ['variable'],
+			types: ['function']
 		},
 		{
-			selector: 'variable',
-			types: ['boolean'],
+			filter: { match: false, regex: '^(changed|done|found|result|retry|waiting|(.+)Changed|(.+)Updated)$' },
 			format: null,
-			filter: { regex: '^(changed|done|found|result|retry|waiting|(.+)Changed|(.+)Updated)$', match: false },
-			prefix: ['bool', 'can', 'did', 'has', 'is', 'should', 'use', 'was', 'will']
+			prefix: ['bool', 'can', 'did', 'has', 'is', 'should', 'use', 'was', 'will'],
+			selector: 'variable',
+			types: ['boolean']
 		},
 		{
-			selector: 'variable',
-			types: ['boolean'],
+			filter: { match: true, regex: '^((.+)Changed|(.+)Updated)$' },
 			format: ['strictCamelCase'],
-			filter: { regex: '^((.+)Changed|(.+)Updated)$', match: true },
-			suffix: ['Changed', 'Updated']
-		},
-		{
 			selector: 'variable',
+			suffix: ['Changed', 'Updated'],
+			types: ['boolean']
+		},
+		{
+			filter: { match: false, regex: '^_(id)?$' },
 			format: isJsx ? ['strictCamelCase', 'StrictPascalCase'] : ['strictCamelCase'],
-			filter: { regex: '^_(id)?$', match: false }
+			selector: 'variable'
 		},
 		{
-			selector: ['class', 'enum', 'interface', 'typeAlias'],
-			format: ['StrictPascalCase']
-		},
-		{
-			selector: 'typeParameter',
 			format: ['StrictPascalCase'],
-			filter: { regex: '^(T|U|V)$', match: false },
-			prefix: ['T']
+			selector: ['class', 'enum', 'interface', 'typeAlias']
 		},
 		{
-			selector: 'classProperty',
-			modifiers: ['private'],
+			filter: { match: false, regex: '^(T|U|V)$' },
+			format: ['StrictPascalCase'],
+			prefix: ['T'],
+			selector: 'typeParameter'
+		},
+		{
+			format: ['strictCamelCase'],
 			leadingUnderscore: 'require',
-			format: ['strictCamelCase']
+			modifiers: ['private'],
+			selector: 'classProperty'
 		},
 		{
-			selector: 'classProperty',
-			modifiers: ['public'],
+			filter: { match: false, regex: '^(_id)$' },
+			format: ['strictCamelCase'],
 			leadingUnderscore: 'forbid',
-			filter: { regex: '^(_id)$', match: false },
-			format: ['strictCamelCase']
+			modifiers: ['public'],
+			selector: 'classProperty'
 		},
 		{
-			selector: 'classMethod',
-			filter: { regex: '^(toJSON)$', match: false },
-			format: ['strictCamelCase']
+			filter: { match: false, regex: '^(toJSON)$' },
+			format: ['strictCamelCase'],
+			selector: 'classMethod'
 		}
 	] as Rules[string];
 }
@@ -210,57 +210,14 @@ function createNamingConventions(isJsx: boolean) {
  * `typescript/no-unnecessary-condition` needs the consumer's root config to set `options.typeAware`.
  */
 const temelyos: Rules = {
-	'import/no-duplicates': 'error',
-	'no-debugger': 'warn',
-	'no-empty': ['error', { allowEmptyCatch: true }],
-	'no-empty-pattern': ['error', { allowObjectPatternsAsParameters: true }],
-	'no-throw-literal': 'error',
-	'prefer-const': ['error', { destructuring: 'all' }],
-	'prefer-rest-params': 'off',
-	'perfectionist/sort-classes': [
-		'error',
-		{
-			order: 'asc',
-			type: 'natural',
-			groups: [
-				'index-signature',
-				'static-property',
-				'static-block',
-				['protected-property', 'protected-accessor-property'],
-				['private-property', 'private-accessor-property'],
-				['property', 'accessor-property'],
-				'constructor',
-				['static-method', 'protected-method', 'private-method', 'method', 'get-method', 'set-method'],
-				'unknown'
-			]
-		}
-	],
-	'perfectionist/sort-modules': [
-		'error',
-		{
-			order: 'asc',
-			type: 'natural',
-			groups: [
-				'declare-enum',
-				'declare-function',
-				['declare-class', 'declare-interface', 'declare-type'],
-				['export-enum', 'enum'],
-				['export-interface', 'export-type', 'interface', 'type'],
-				['export-function', 'function'],
-				['class', 'export-class']
-			]
-		}
-	],
-	'perfectionist/sort-intersection-types': 'off',
 	'@stylistic/block-spacing': 'error',
 	'@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: true }],
 	'@stylistic/comma-dangle': ['error', 'never'],
-	'@stylistic/comma-spacing': ['error', { before: false, after: true }],
+	'@stylistic/comma-spacing': ['error', { after: true, before: false }],
 	'@stylistic/dot-location': ['error', 'property'],
 	'@stylistic/function-call-spacing': ['error', 'never'],
 	'@stylistic/indent': ['error', 'tab', { ignoredNodes: ['ConditionalExpression'], SwitchCase: 1 }],
 	'@stylistic/indent-binary-ops': ['error', 'tab'],
-	'@stylistic/operator-linebreak': ['error', 'before', { overrides: { '=': 'after', '+=': 'after', '-=': 'after' } }],
 	'@stylistic/member-delimiter-style': [
 		'error',
 		{
@@ -273,27 +230,70 @@ const temelyos: Rules = {
 	'@stylistic/no-tabs': ['error', { allowIndentationTabs: true }],
 	'@stylistic/no-trailing-spaces': 'error',
 	'@stylistic/no-whitespace-before-property': 'error',
+	'@stylistic/operator-linebreak': ['error', 'before', { overrides: { '+=': 'after', '-=': 'after', '=': 'after' } }],
 	'@stylistic/quote-props': ['error', 'consistent'],
 	'@stylistic/quotes': ['error', 'single', { allowTemplateLiterals: 'always', avoidEscape: true }],
-	'@stylistic/semi-spacing': 'error',
 	'@stylistic/semi': ['error', 'always'],
-	'typescript/consistent-type-definitions': ['error', 'interface'],
-	'typescript/no-explicit-any': 'off',
-	'typescript/no-restricted-types': 'warn',
+	'@stylistic/semi-spacing': 'error',
+	'import/no-duplicates': 'error',
+	'no-debugger': 'warn',
+	'no-empty': ['error', { allowEmptyCatch: true }],
+	'no-empty-pattern': ['error', { allowObjectPatternsAsParameters: true }],
+	'no-throw-literal': 'error',
 	'no-unused-vars': [
 		'error',
 		{
-			caughtErrors: 'none',
-			ignoreRestSiblings: true,
-			varsIgnorePattern: '^_',
 			argsIgnorePattern: '^_',
-			caughtErrorsIgnorePattern: '^_'
+			caughtErrors: 'none',
+			caughtErrorsIgnorePattern: '^_',
+			ignoreRestSiblings: true,
+			varsIgnorePattern: '^_'
 		}
 	],
+	'perfectionist/sort-classes': [
+		'error',
+		{
+			groups: [
+				'index-signature',
+				'static-property',
+				'static-block',
+				['protected-property', 'protected-accessor-property'],
+				['private-property', 'private-accessor-property'],
+				['property', 'accessor-property'],
+				'constructor',
+				['static-method', 'protected-method', 'private-method', 'method', 'get-method', 'set-method'],
+				'unknown'
+			],
+			order: 'asc',
+			type: 'natural'
+		}
+	],
+	'perfectionist/sort-intersection-types': 'off',
+	'perfectionist/sort-modules': [
+		'error',
+		{
+			groups: [
+				'declare-enum',
+				'declare-function',
+				['declare-class', 'declare-interface', 'declare-type'],
+				['export-enum', 'enum'],
+				['export-interface', 'export-type', 'interface', 'type'],
+				['export-function', 'function'],
+				['class', 'export-class']
+			],
+			order: 'asc',
+			type: 'natural'
+		}
+	],
+	'prefer-const': ['error', { destructuring: 'all' }],
+	'prefer-rest-params': 'off',
+	'typescript/consistent-type-definitions': ['error', 'interface'],
+	'typescript/no-explicit-any': 'off',
+	'typescript/no-restricted-types': 'warn',
 	'typescript/no-unnecessary-condition': ['error', { allowConstantLoopConditions: 'only-allowed-literals' }]
 };
 
-const config: OxlintConfig = {
+const Config: OxlintConfig = {
 	categories: { correctness: 'off' },
 	env: { builtin: true },
 	jsPlugins: [
@@ -301,12 +301,6 @@ const config: OxlintConfig = {
 		{ name: '@temelyos', specifier: resolvePlugin('./plugin.js') },
 		{ name: 'perfectionist', specifier: resolvePlugin('eslint-plugin-perfectionist') }
 	],
-	plugins: ['typescript', 'import'],
-	rules: {
-		...recommended,
-		...stylistic.configs.recommended.rules as Rules,
-		...perfectionist.configs['recommended-natural'].rules as Rules
-	},
 	// Order matters as it does in the ESLint config: the Temelyos rules come after
 	// `typeScriptChecked`, so their `prefer-const` and `prefer-rest-params` win on TypeScript files.
 	overrides: [
@@ -315,8 +309,8 @@ const config: OxlintConfig = {
 			rules: typeScriptChecked
 		},
 		{
-			files: ['**/*.{js,mjs,cjs,ts,mts,jsx,tsx}'],
 			env: { node: true },
+			files: ['**/*.{js,mjs,cjs,ts,mts,jsx,tsx}'],
 			rules: temelyos
 		},
 		{
@@ -330,7 +324,13 @@ const config: OxlintConfig = {
 				'@temelyos/naming-convention': createNamingConventions(true)
 			}
 		}
-	]
+	],
+	plugins: ['typescript', 'import'],
+	rules: {
+		...recommended,
+		...stylistic.configs.recommended.rules as Rules,
+		...perfectionist.configs['recommended-natural'].rules as Rules
+	}
 };
 
-export default config;
+export default Config;

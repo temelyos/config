@@ -25,12 +25,14 @@
 	"scripts": {
 		"build": "node ../../scripts/build.mjs && tsc --project tsconfig.build.json",
 		"deploy": "npm run build && node ../../scripts/publish.mjs",
+		"lint": "oxlint -c ../../oxlint.config.mts",
+		"lint:fix": "node ../../scripts/lint-fix.mjs -c ../../oxlint.config.mts",
 		"test": "node --import tsx --test \"src/**/*.spec.ts\""
 	},
 	"devDependencies": {
 		"@oxlint/plugins": "catalog:oxlint",
 		"oxlint": "catalog:oxlint",
-		"typescript": "catalog:"
+		"typescript-native": "catalog:"
 	},
 	"dependencies": {
 		"@stylistic/eslint-plugin": "catalog:eslint",

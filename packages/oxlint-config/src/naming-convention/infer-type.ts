@@ -9,11 +9,11 @@ import { type AstNode, isBuiltIn, resolveVariable } from './ast.js';
  */
 export type TypeKind = 'array' | 'boolean' | 'function' | 'number' | 'other' | 'string';
 
-const COMPARISON_OPERATORS = new Set(['!=', '!==', '<', '<=', '==', '===', '>', '>=', 'in', 'instanceof']);
-const NUMERIC_OPERATORS = new Set(['%', '&', '*', '**', '-', '/', '<<', '>>', '^', '|']);
+const comparisonOperators = new Set(['!=', '!==', '<', '<=', '==', '===', '>', '>=', 'in', 'instanceof']);
+const numericOperators = new Set(['%', '&', '*', '**', '-', '/', '<<', '>>', '^', '|']);
 
-const GLOBAL_CALLS: Record<string, TypeKind> = { Array: 'array', Boolean: 'boolean', Number: 'number', parseFloat: 'number', parseInt: 'number', String: 'string' };
-const STATIC_CALLS: Record<string, Record<string, TypeKind>> = {
+const globalCalls: Record<string, TypeKind> = { Array: 'array', Boolean: 'boolean', Number: 'number', parseFloat: 'number', parseInt: 'number', String: 'string' };
+const staticCalls: Record<string, Record<string, TypeKind>> = {
 	Array: { from: 'array', isArray: 'boolean', of: 'array' },
 	Date: { now: 'number', parse: 'number', UTC: 'number' },
 	JSON: { stringify: 'string' },
@@ -22,7 +22,7 @@ const STATIC_CALLS: Record<string, Record<string, TypeKind>> = {
 	String: { fromCharCode: 'string', fromCodePoint: 'string', raw: 'string' }
 };
 /** Methods whose result is settled by the receiver's type. */
-const METHOD_RESULTS: Partial<Record<TypeKind, Record<string, TypeKind>>> = {
+const methodResults: Partial<Record<TypeKind, Record<string, TypeKind>>> = {
 	array: {
 		concat: 'array', every: 'boolean', filter: 'array', findIndex: 'number', findLastIndex: 'number', flat: 'array', flatMap: 'array',
 		includes: 'boolean', indexOf: 'number', join: 'string', lastIndexOf: 'number', map: 'array', push: 'number', reverse: 'array',
@@ -37,7 +37,7 @@ const METHOD_RESULTS: Partial<Record<TypeKind, Record<string, TypeKind>>> = {
 	}
 };
 /** Well-known object types: never one of the checked kinds. */
-const OBJECT_TYPE_NAMES = new Set(['Date', 'Error', 'Map', 'Promise', 'Record', 'RegExp', 'Set', 'URL', 'WeakMap', 'WeakSet']);
+const objectTypeNames = new Set(['Date', 'Error', 'Map', 'Promise', 'Record', 'RegExp', 'Set', 'URL', 'WeakMap', 'WeakSet']);
 const MAX_DEPTH = 8;
 
 /** Several possible kinds are one kind when they agree, `other` when they do not. */
@@ -45,77 +45,6 @@ function combine(kinds: (TypeKind | undefined)[]): TypeKind | undefined {
 	if (kinds.includes(undefined)) return undefined;
 
 	return kinds.every(kind => kind === kinds[0]) ? kinds[0] : 'other';
-}
-
-function isObjectValue(node: AstNode | null | undefined): boolean {
-	if (node?.type === 'TSSatisfiesExpression' || node?.type === 'ParenthesizedExpression') return isObjectValue(node.expression);
-
-	return node?.type === 'ObjectExpression' || node?.type === 'ClassExpression'
-		|| (node?.type === 'NewExpression' && !(node.callee.type === 'Identifier' && (node.callee.name === 'Array' || node.callee.name === 'Proxy')));
-}
-
-/** `null` and `undefined`, which the type checker drops from a name's type before comparing. */
-function isNullish(node: AstNode) {
-	return (node.type === 'Literal' && node.value === null && !node.regex) || (node.type === 'Identifier' && node.name === 'undefined');
-}
-
-export function inferTypeNode(node: AstNode | null | undefined): TypeKind | undefined {
-	switch (node?.type) {
-		case 'TSBooleanKeyword':
-			return 'boolean';
-		case 'TSNumberKeyword':
-			return 'number';
-		case 'TSStringKeyword':
-		case 'TSTemplateLiteralType':
-			return 'string';
-		case 'TSArrayType':
-		case 'TSTupleType':
-			return 'array';
-		case 'TSFunctionType':
-			return 'function';
-		case 'TSTypePredicate':
-			return node.asserts ? 'other' : 'boolean';
-		case 'TSAnyKeyword':
-		case 'TSBigIntKeyword':
-		case 'TSConstructorType':
-		case 'TSNeverKeyword':
-		case 'TSNullKeyword':
-		case 'TSObjectKeyword':
-		case 'TSSymbolKeyword':
-		case 'TSUndefinedKeyword':
-		case 'TSUnknownKeyword':
-		case 'TSVoidKeyword':
-			return 'other';
-		case 'TSLiteralType': {
-			const literal = node.literal;
-
-			if (literal.type === 'TemplateLiteral') return 'string';
-			if (literal.type === 'UnaryExpression') return 'number';
-
-			return typeof literal.value === 'boolean' || typeof literal.value === 'number' || typeof literal.value === 'string' ? typeof literal.value as TypeKind : 'other';
-		}
-		case 'TSParenthesizedType':
-			return inferTypeNode(node.typeAnnotation);
-		case 'TSTypeOperator':
-			return node.operator === 'readonly' && inferTypeNode(node.typeAnnotation) === 'array' ? 'array' : undefined;
-		case 'TSTypeLiteral':
-			return node.members.some((member: AstNode) => member.type === 'TSCallSignatureDeclaration') ? 'function' : 'other';
-		case 'TSTypeReference': {
-			const name = node.typeName.type === 'Identifier' ? node.typeName.name : undefined;
-
-			if (name === 'Array' || name === 'ReadonlyArray') return 'array';
-
-			return name && OBJECT_TYPE_NAMES.has(name) ? 'other' : undefined;
-		}
-		case 'TSUnionType': {
-			// the type checker drops null and undefined before comparing
-			const members = node.types.filter((member: AstNode) => member.type !== 'TSNullKeyword' && member.type !== 'TSUndefinedKeyword');
-
-			return members.length ? combine(members.map(inferTypeNode)) : 'other';
-		}
-	}
-
-	return undefined;
 }
 
 export function createTypeInference(context: Context) {
@@ -198,7 +127,7 @@ export function createTypeInference(context: Context) {
 		const callee = node.callee;
 
 		if (callee.type === 'Identifier') {
-			return Object.hasOwn(GLOBAL_CALLS, callee.name) && isBuiltIn(context, callee) ? GLOBAL_CALLS[callee.name] : inferReturn(callee, depth);
+			return Object.hasOwn(globalCalls, callee.name) && isBuiltIn(context, callee) ? globalCalls[callee.name] : inferReturn(callee, depth);
 		}
 
 		if (callee.type !== 'MemberExpression' || callee.computed || callee.property.type !== 'Identifier') return undefined;
@@ -209,7 +138,7 @@ export function createTypeInference(context: Context) {
 		if (receiver.type === 'Identifier' && isBuiltIn(context, receiver)) {
 			if (receiver.name === 'Math') return 'number';
 
-			const result = STATIC_CALLS[receiver.name]?.[method];
+			const result = staticCalls[receiver.name]?.[method];
 
 			if (result) return result;
 		}
@@ -218,70 +147,44 @@ export function createTypeInference(context: Context) {
 
 		const receiverKind = inferExpression(receiver, depth + 1);
 
-		return receiverKind ? METHOD_RESULTS[receiverKind]?.[method] : undefined;
+		return receiverKind ? methodResults[receiverKind]?.[method] : undefined;
 	}
 
 	function inferExpression(node: AstNode | null | undefined, depth: number): TypeKind | undefined {
 		if (!node || depth > MAX_DEPTH) return undefined;
 
 		switch (node.type) {
-			case 'Literal':
-				if (node.regex || node.bigint !== undefined || node.value === null) return 'other';
-
-				return typeof node.value as TypeKind;
-			case 'TemplateLiteral':
-				return 'string';
 			case 'ArrayExpression':
 				return 'array';
 			case 'ArrowFunctionExpression':
 			case 'FunctionExpression':
 				return 'function';
+			case 'AssignmentExpression':
+				return node.operator === '=' ? inferExpression(node.right, depth + 1) : undefined;
+			case 'CallExpression':
+				return inferCall(node, depth);
+			case 'ChainExpression':
+			case 'ParenthesizedExpression':
+			case 'TSNonNullExpression':
+			case 'TSSatisfiesExpression':
+				return inferExpression(node.expression, depth + 1);
 			case 'ClassExpression':
 			case 'ImportExpression':
 			case 'JSXElement':
 			case 'JSXFragment':
 			case 'ObjectExpression':
 				return 'other';
-			case 'NewExpression':
-				if (node.callee.type === 'Identifier' && isBuiltIn(context, node.callee)) {
-					if (node.callee.name === 'Array') return 'array';
-					// a proxy has its target's type
-					if (node.callee.name === 'Proxy') return undefined;
-				}
-
-				return 'other';
-			case 'UnaryExpression':
-				switch (node.operator) {
-					case '!':
-					case 'delete':
-						return 'boolean';
-					case 'typeof':
-						return 'string';
-					case 'void':
-						return 'other';
-					case '+':
-						return 'number';
-					default:
-						// `-` and `~` keep a bigint a bigint
-						return inferExpression(node.argument, depth + 1) === 'number' ? 'number' : undefined;
-				}
-			case 'BinaryExpression': {
-				if (COMPARISON_OPERATORS.has(node.operator)) return 'boolean';
-				if (node.operator === '>>>') return 'number';
-
-				const left = inferExpression(node.left, depth + 1);
-				const right = inferExpression(node.right, depth + 1);
-
-				if (node.operator === '+' && (left === 'string' || right === 'string')) return 'string';
-				if ((node.operator === '+' || NUMERIC_OPERATORS.has(node.operator)) && left === 'number' && right === 'number') return 'number';
-
-				return undefined;
-			}
 			case 'ConditionalExpression': {
 				const branches = [node.consequent, node.alternate].filter(branch => !isNullish(branch));
 
 				return branches.length ? combine(branches.map(branch => inferExpression(branch, depth + 1))) : 'other';
 			}
+			case 'Identifier':
+				return inferReference(node, depth);
+			case 'Literal':
+				if (node.regex || node.bigint !== undefined || node.value === null) return 'other';
+
+				return typeof node.value as TypeKind;
 			case 'LogicalExpression': {
 				// `||` and `??` drop parts of the left operand's type and `&&` keeps only its falsy ones,
 				// so only operands that all agree settle the result
@@ -296,24 +199,6 @@ export function createTypeInference(context: Context) {
 
 				return first;
 			}
-			case 'SequenceExpression':
-				return inferExpression(node.expressions.at(-1), depth + 1);
-			case 'AssignmentExpression':
-				return node.operator === '=' ? inferExpression(node.right, depth + 1) : undefined;
-			case 'TSAsExpression':
-			case 'TSTypeAssertion': {
-				const annotation = node.typeAnnotation;
-				const isConst = annotation.type === 'TSTypeReference' && annotation.typeName.type === 'Identifier' && annotation.typeName.name === 'const';
-
-				return isConst ? inferExpression(node.expression, depth + 1) : inferTypeNode(annotation);
-			}
-			case 'ChainExpression':
-			case 'ParenthesizedExpression':
-			case 'TSNonNullExpression':
-			case 'TSSatisfiesExpression':
-				return inferExpression(node.expression, depth + 1);
-			case 'CallExpression':
-				return inferCall(node, depth);
 			case 'MemberExpression': {
 				if (node.computed || node.property.type !== 'Identifier' || node.property.name !== 'length') return undefined;
 
@@ -321,8 +206,52 @@ export function createTypeInference(context: Context) {
 
 				return receiver === 'array' || receiver === 'string' ? 'number' : undefined;
 			}
-			case 'Identifier':
-				return inferReference(node, depth);
+			case 'NewExpression':
+				if (node.callee.type === 'Identifier' && isBuiltIn(context, node.callee)) {
+					if (node.callee.name === 'Array') return 'array';
+					// a proxy has its target's type
+					if (node.callee.name === 'Proxy') return undefined;
+				}
+
+				return 'other';
+			case 'SequenceExpression':
+				return inferExpression(node.expressions.at(-1), depth + 1);
+			case 'TemplateLiteral':
+				return 'string';
+			case 'TSAsExpression':
+			case 'TSTypeAssertion': {
+				const annotation = node.typeAnnotation;
+				const isConst = annotation.type === 'TSTypeReference' && annotation.typeName.type === 'Identifier' && annotation.typeName.name === 'const';
+
+				return isConst ? inferExpression(node.expression, depth + 1) : inferTypeNode(annotation);
+			}
+			case 'UnaryExpression':
+				switch (node.operator) {
+					case '!':
+					case 'delete':
+						return 'boolean';
+					case '+':
+						return 'number';
+					case 'typeof':
+						return 'string';
+					case 'void':
+						return 'other';
+					default:
+						// `-` and `~` keep a bigint a bigint
+						return inferExpression(node.argument, depth + 1) === 'number' ? 'number' : undefined;
+				}
+			case 'BinaryExpression': {
+				if (comparisonOperators.has(node.operator)) return 'boolean';
+				if (node.operator === '>>>') return 'number';
+
+				const left = inferExpression(node.left, depth + 1);
+				const right = inferExpression(node.right, depth + 1);
+
+				if (node.operator === '+' && (left === 'string' || right === 'string')) return 'string';
+				if ((node.operator === '+' || numericOperators.has(node.operator)) && left === 'number' && right === 'number') return 'number';
+
+				return undefined;
+			}
 		}
 
 		return undefined;
@@ -366,4 +295,75 @@ export function createTypeInference(context: Context) {
 			return member.kind === 'set' || !member.value ? undefined : inferExpression(member.value, 0);
 		}
 	};
+}
+
+export function inferTypeNode(node: AstNode | null | undefined): TypeKind | undefined {
+	switch (node?.type) {
+		case 'TSAnyKeyword':
+		case 'TSBigIntKeyword':
+		case 'TSConstructorType':
+		case 'TSNeverKeyword':
+		case 'TSNullKeyword':
+		case 'TSObjectKeyword':
+		case 'TSSymbolKeyword':
+		case 'TSUndefinedKeyword':
+		case 'TSUnknownKeyword':
+		case 'TSVoidKeyword':
+			return 'other';
+		case 'TSArrayType':
+		case 'TSTupleType':
+			return 'array';
+		case 'TSBooleanKeyword':
+			return 'boolean';
+		case 'TSFunctionType':
+			return 'function';
+		case 'TSLiteralType': {
+			const literal = node.literal;
+
+			if (literal.type === 'TemplateLiteral') return 'string';
+			if (literal.type === 'UnaryExpression') return 'number';
+
+			return typeof literal.value === 'boolean' || typeof literal.value === 'number' || typeof literal.value === 'string' ? typeof literal.value as TypeKind : 'other';
+		}
+		case 'TSNumberKeyword':
+			return 'number';
+		case 'TSParenthesizedType':
+			return inferTypeNode(node.typeAnnotation);
+		case 'TSStringKeyword':
+		case 'TSTemplateLiteralType':
+			return 'string';
+		case 'TSTypeLiteral':
+			return node.members.some((member: AstNode) => member.type === 'TSCallSignatureDeclaration') ? 'function' : 'other';
+		case 'TSTypeOperator':
+			return node.operator === 'readonly' && inferTypeNode(node.typeAnnotation) === 'array' ? 'array' : undefined;
+		case 'TSTypePredicate':
+			return node.asserts ? 'other' : 'boolean';
+		case 'TSTypeReference': {
+			const name = node.typeName.type === 'Identifier' ? node.typeName.name : undefined;
+
+			if (name === 'Array' || name === 'ReadonlyArray') return 'array';
+
+			return name && objectTypeNames.has(name) ? 'other' : undefined;
+		}
+		case 'TSUnionType': {
+			// the type checker drops null and undefined before comparing
+			const members = node.types.filter((member: AstNode) => member.type !== 'TSNullKeyword' && member.type !== 'TSUndefinedKeyword');
+
+			return members.length ? combine(members.map(inferTypeNode)) : 'other';
+		}
+	}
+
+	return undefined;
+}
+
+/** `null` and `undefined`, which the type checker drops from a name's type before comparing. */
+function isNullish(node: AstNode) {
+	return (node.type === 'Literal' && node.value === null && !node.regex) || (node.type === 'Identifier' && node.name === 'undefined');
+}
+
+function isObjectValue(node: AstNode | null | undefined): boolean {
+	if (node?.type === 'TSSatisfiesExpression' || node?.type === 'ParenthesizedExpression') return isObjectValue(node.expression);
+
+	return node?.type === 'ObjectExpression' || node?.type === 'ClassExpression'
+		|| (node?.type === 'NewExpression' && !(node.callee.type === 'Identifier' && (node.callee.name === 'Array' || node.callee.name === 'Proxy')));
 }

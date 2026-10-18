@@ -1,22 +1,6 @@
 // Ported from typescript-eslint's naming-convention, which took them from
 // tslint-consistent-codestyle. Not regexes, so non-English letters count as cased.
 
-function isPascalCase(name: string) {
-	return name.length === 0 || (name[0] === name[0]!.toUpperCase() && !name.includes('_'));
-}
-
-function isStrictPascalCase(name: string) {
-	return name.length === 0 || (name[0] === name[0]!.toUpperCase() && hasStrictCamelHumps(name, true));
-}
-
-function isCamelCase(name: string) {
-	return name.length === 0 || (name[0] === name[0]!.toLowerCase() && !name.includes('_'));
-}
-
-function isStrictCamelCase(name: string) {
-	return name.length === 0 || (name[0] === name[0]!.toLowerCase() && hasStrictCamelHumps(name, false));
-}
-
 function hasStrictCamelHumps(name: string, isUpper: boolean) {
 	const isUppercaseChar = (char: string) => char === char.toUpperCase() && char !== char.toLowerCase();
 
@@ -35,8 +19,24 @@ function hasStrictCamelHumps(name: string, isUpper: boolean) {
 	return true;
 }
 
+function isCamelCase(name: string) {
+	return name.length === 0 || (name[0] === name[0]!.toLowerCase() && !name.includes('_'));
+}
+
+function isPascalCase(name: string) {
+	return name.length === 0 || (name[0] === name[0]!.toUpperCase() && !name.includes('_'));
+}
+
 function isSnakeCase(name: string) {
 	return name.length === 0 || (name === name.toLowerCase() && validateUnderscores(name));
+}
+
+function isStrictCamelCase(name: string) {
+	return name.length === 0 || (name[0] === name[0]!.toLowerCase() && hasStrictCamelHumps(name, false));
+}
+
+function isStrictPascalCase(name: string) {
+	return name.length === 0 || (name[0] === name[0]!.toUpperCase() && hasStrictCamelHumps(name, true));
 }
 
 function isUpperCase(name: string) {
@@ -62,7 +62,7 @@ function validateUnderscores(name: string) {
 	return !wasUnderscore;
 }
 
-export const FORMAT_CHECKS = {
+export const FormatChecks = {
 	camelCase: isCamelCase,
 	PascalCase: isPascalCase,
 	snake_case: isSnakeCase,
@@ -71,4 +71,4 @@ export const FORMAT_CHECKS = {
 	UPPER_CASE: isUpperCase
 };
 
-export type FormatName = keyof typeof FORMAT_CHECKS;
+export type FormatName = keyof typeof FormatChecks;
