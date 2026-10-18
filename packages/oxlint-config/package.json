@@ -24,9 +24,11 @@
 	],
 	"scripts": {
 		"build": "node ../../scripts/build.mjs && tsc --project tsconfig.build.json",
-		"deploy": "npm run build && node ../../scripts/publish.mjs"
+		"deploy": "npm run build && node ../../scripts/publish.mjs",
+		"test": "node --import tsx --test \"src/**/*.spec.ts\""
 	},
 	"devDependencies": {
+		"@oxlint/plugins": "catalog:oxlint",
 		"oxlint": "catalog:oxlint",
 		"typescript": "catalog:"
 	},

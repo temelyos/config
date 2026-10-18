@@ -119,6 +119,92 @@ const typeScriptChecked: Rules = {
 	'prefer-spread': 'error'
 };
 
+/** `@temelyos/naming-convention` options, as `@temelyos/eslint-config` passes them to typescript-eslint's rule. */
+function createNamingConventions(isJsx: boolean) {
+	return [
+		'error',
+		{
+			selector: ['function'],
+			modifiers: ['exported'],
+			format: isJsx ? ['strictCamelCase', 'StrictPascalCase'] : ['strictCamelCase']
+		},
+		{
+			selector: ['variable'],
+			types: ['array', 'boolean', 'number', 'string'],
+			modifiers: ['exported'],
+			format: ['UPPER_CASE'],
+			filter: { regex: '^_$', match: false }
+		},
+		{
+			selector: ['variable'],
+			types: ['array', 'boolean', 'number', 'string'],
+			modifiers: ['global', 'const'],
+			format: ['UPPER_CASE'],
+			filter: { regex: '^_$', match: false }
+		},
+		{
+			selector: ['variable'],
+			modifiers: ['exported'],
+			format: ['StrictPascalCase'],
+			filter: { regex: isJsx ? '^_|(metadata)$' : '^_$', match: false }
+		},
+		{
+			selector: ['variable'],
+			modifiers: ['global'],
+			types: ['function'],
+			format: isJsx ? ['strictCamelCase', 'StrictPascalCase'] : ['strictCamelCase'],
+			filter: { regex: '^_$', match: false }
+		},
+		{
+			selector: 'variable',
+			types: ['boolean'],
+			format: null,
+			filter: { regex: '^(changed|done|found|result|retry|waiting|(.+)Changed|(.+)Updated)$', match: false },
+			prefix: ['bool', 'can', 'did', 'has', 'is', 'should', 'use', 'was', 'will']
+		},
+		{
+			selector: 'variable',
+			types: ['boolean'],
+			format: ['strictCamelCase'],
+			filter: { regex: '^((.+)Changed|(.+)Updated)$', match: true },
+			suffix: ['Changed', 'Updated']
+		},
+		{
+			selector: 'variable',
+			format: isJsx ? ['strictCamelCase', 'StrictPascalCase'] : ['strictCamelCase'],
+			filter: { regex: '^_(id)?$', match: false }
+		},
+		{
+			selector: ['class', 'enum', 'interface', 'typeAlias'],
+			format: ['StrictPascalCase']
+		},
+		{
+			selector: 'typeParameter',
+			format: ['StrictPascalCase'],
+			filter: { regex: '^(T|U|V)$', match: false },
+			prefix: ['T']
+		},
+		{
+			selector: 'classProperty',
+			modifiers: ['private'],
+			leadingUnderscore: 'require',
+			format: ['strictCamelCase']
+		},
+		{
+			selector: 'classProperty',
+			modifiers: ['public'],
+			leadingUnderscore: 'forbid',
+			filter: { regex: '^(_id)$', match: false },
+			format: ['strictCamelCase']
+		},
+		{
+			selector: 'classMethod',
+			filter: { regex: '^(toJSON)$', match: false },
+			format: ['strictCamelCase']
+		}
+	] as Rules[string];
+}
+
 /**
  * The Temelyos rules, kept in the same order as `@temelyos/eslint-config` so the two diff cleanly.
  * `typescript/no-unnecessary-condition` needs the consumer's root config to set `options.typeAware`.
@@ -212,6 +298,7 @@ const config: OxlintConfig = {
 	env: { builtin: true },
 	jsPlugins: [
 		{ name: '@stylistic', specifier: resolvePlugin('@stylistic/eslint-plugin') },
+		{ name: '@temelyos', specifier: resolvePlugin('./plugin.js') },
 		{ name: 'perfectionist', specifier: resolvePlugin('eslint-plugin-perfectionist') }
 	],
 	plugins: ['typescript', 'import'],
@@ -233,8 +320,15 @@ const config: OxlintConfig = {
 			rules: temelyos
 		},
 		{
+			files: ['**/*.{js,mjs,cjs,ts,mts}'],
+			rules: { '@temelyos/naming-convention': createNamingConventions(false) }
+		},
+		{
 			files: ['**/*.{jsx,tsx}'],
-			rules: { '@stylistic/jsx-indent-props': ['error', 'tab'] }
+			rules: {
+				'@stylistic/jsx-indent-props': ['error', 'tab'],
+				'@temelyos/naming-convention': createNamingConventions(true)
+			}
 		}
 	]
 };

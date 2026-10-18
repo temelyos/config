@@ -30,8 +30,18 @@ export default defineConfig({
 
 TypeScript config files need Node 22.18+ or 24+.
 
+## 🏷️ `@temelyos/naming-convention`
+
+Oxlint has no `naming-convention`, so this package ships a port of typescript-eslint's rule as a JS plugin, registered as `@temelyos` (`@typescript-eslint` is reserved for Oxlint's own rules). It takes typescript-eslint's options unchanged and reports the same messages; the config passes it the options `@temelyos/eslint-config` uses.
+
+Everything but `types` behaves as in typescript-eslint: selectors, modifiers, formats, affixes, underscores, filters, and the order configs are tried in. `types` needs the type checker, which JS plugins do not get, so the port infers types from syntax: annotations, literals, operators, well-known built-ins, and local declarations. When syntax cannot settle a type, a config with `types` neither passes nor fails a name on its own: the name is accepted if that config would allow it. So the port can miss a name typescript-eslint would report (typically a constant holding the result of an imported function), but it does not report one typescript-eslint would accept.
+
+The `unused` modifier is approximated as "never read and not exported".
+
+Suppression comments name the new rule: `// eslint-disable-next-line @temelyos/naming-convention`.
+
 ## ⚠️ Differences from `@temelyos/eslint-config`
 
-- `@typescript-eslint/naming-convention` is not ported yet: Oxlint has no equivalent, and its type filters need type information that JS plugins do not get.
+- `naming-convention` is `@temelyos/naming-convention`, with types inferred from syntax (above).
 - `no-dupe-args` and `no-octal` are dropped: Oxlint does not implement them, since both are already syntax errors in strict mode. Only non-module scripts (CommonJS) lose the check.
 - `typescript/no-unnecessary-condition` runs only with `options.typeAware` (or `--type-aware`).

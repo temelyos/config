@@ -27,5 +27,6 @@ catalogs:
     "@types/node": ^26.5.0
 
   oxlint:
+    "@oxlint/plugins": ^1.88.0
     oxlint: ^1.88.0
     oxlint-tsgolint: ^7.0.2004
