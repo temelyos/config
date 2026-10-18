@@ -8,16 +8,21 @@
 	"scripts": {
 		"build": "turbo run build",
 		"clean": "node scripts/clean.mjs",
-		"deploy": "npm run deploy:tsconfig && npm run deploy:eslint-config",
+		"deploy": "npm run deploy:tsconfig && npm run deploy:eslint-config && npm run deploy:oxlint-config",
 		"deploy:eslint-config": "cd packages/eslint-config && npm run deploy",
+		"deploy:oxlint-config": "cd packages/oxlint-config && npm run deploy",
 		"deploy:tsconfig": "cd packages/tsconfig && npm run deploy",
+		"lint": "turbo run lint",
+		"lint:fix": "turbo run lint:fix",
 		"prune": "node scripts/prune.mjs"
 	},
 	"devDependencies": {
+		"@temelyos/oxlint-config": "workspace:^",
 		"@types/node": "catalog:node",
+		"oxlint": "catalog:oxlint",
+		"oxlint-tsgolint": "catalog:oxlint",
 		"tsx": "catalog:",
 		"turbo": "catalog:",
-		"typescript": "catalog:",
-		"typescript-native": "catalog:"
+		"typescript": "catalog:"
 	}
 }

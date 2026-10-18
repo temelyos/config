@@ -4,12 +4,10 @@ packages:
 catalog:
   tsx:  ^4.23.13
   turbo: ^2.10.12
-  typescript: npm:@typescript/typescript6@^6.0.2
-  typescript-native: npm:typescript@^7.0.2
+  typescript: ^7.0.2
 
 catalogs:
   eslint:
-    "@eslint/eslintrc": 3.3.7
     "@eslint/js": ^9.39.5
     "@stylistic/eslint-plugin": ^5.10.0
     eslint-plugin-import: ^2.32.0
@@ -25,3 +23,13 @@ catalogs:
 
   node:
     "@types/node": ^26.5.0
+
+  oxlint:
+    "@oxlint/plugins": ^1.88.0
+    oxlint: ^1.88.0
+    oxlint-tsgolint: ^7.0.2004
+
+  # typescript-eslint needs TypeScript's JS API, which TS7 does not ship, so eslint-config keeps
+  # the TS6 compat package under the name it resolves its `typescript` peer from.
+  typescript6:
+    typescript: npm:@typescript/typescript6@^6.0.2

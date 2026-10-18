@@ -1,0 +1,12 @@
+{
+	"extends": "@temelyos/tsconfig/tsconfig.build.json",
+	"include": ["src"],
+	"exclude": ["src/**/*.spec.ts"],
+	"compilerOptions": {
+		"module": "nodenext",
+		"outDir": "dist",
+		"rootDir": "src",
+		// typescript-eslint's declarations import TS6's compiler API, which `typescript` (TS7) does not ship
+		"skipLibCheck": true
+	}
+}
