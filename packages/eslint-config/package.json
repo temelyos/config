@@ -32,7 +32,7 @@
 		"build": "node ../../scripts/build.mjs && tsc --project tsconfig.build.json",
 		"deploy": "npm run build && node ../../scripts/publish.mjs",
 		"lint": "oxlint -c ../../oxlint.config.mts",
-		"lint:fix": "node ../../scripts/lint-fix.mjs -c ../../oxlint.config.mts"
+		"lint:fix": "node ../oxlint-config/dist/bin/lint-fix.js -c ../../oxlint.config.mts"
 	},
 	"devDependencies": {
 		"typescript": "catalog:typescript6"
