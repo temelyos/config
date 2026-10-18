@@ -30,6 +30,21 @@ export default defineConfig({
 
 TypeScript config files need Node 22.18+ or 24+.
 
+Oxlint skips only what `.gitignore` does, not `node_modules` the way ESLint does, and it reads `ignorePatterns` from the root config only. Outside a git checkout, add `'**/node_modules/**'` to the root config's `ignorePatterns`, or `oxlint --fix` rewrites the installed dependencies.
+
+## 🔧 Fixing
+
+`oxlint --fix` applies one pass of fixes and skips any that overlap, where ESLint repeats up to ten times. `temelyos-oxlint-fix` runs it until the files stop changing, then reports what is left, so it lands every fix ESLint's would:
+
+```json
+"scripts": {
+	"lint": "oxlint",
+	"lint:fix": "temelyos-oxlint-fix"
+}
+```
+
+It passes its arguments to oxlint, ignores `node_modules` and `.git` itself, and exits with oxlint's final exit code.
+
 ## 🏷️ `@temelyos/naming-convention`
 
 Oxlint has no `naming-convention`, so this package ships a port of typescript-eslint's rule as a JS plugin, registered as `@temelyos` (`@typescript-eslint` is reserved for Oxlint's own rules). It takes typescript-eslint's options unchanged and reports the same messages; the config passes it the options `@temelyos/eslint-config` uses.
