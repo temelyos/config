@@ -1,0 +1,9 @@
+{
+	"extends": "@temelyos/tsconfig/tsconfig.build.json",
+	"include": ["src"],
+	"compilerOptions": {
+		"module": "nodenext",
+		"outDir": "dist",
+		"rootDir": "src"
+	}
+}

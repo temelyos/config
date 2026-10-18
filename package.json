@@ -8,8 +8,9 @@
 	"scripts": {
 		"build": "turbo run build",
 		"clean": "node scripts/clean.mjs",
-		"deploy": "npm run deploy:tsconfig && npm run deploy:eslint-config",
+		"deploy": "npm run deploy:tsconfig && npm run deploy:eslint-config && npm run deploy:oxlint-config",
 		"deploy:eslint-config": "cd packages/eslint-config && npm run deploy",
+		"deploy:oxlint-config": "cd packages/oxlint-config && npm run deploy",
 		"deploy:tsconfig": "cd packages/tsconfig && npm run deploy",
 		"prune": "node scripts/prune.mjs"
 	},

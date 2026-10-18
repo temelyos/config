@@ -1,0 +1,50 @@
+{
+	"name": "@temelyos/oxlint-config",
+	"version": "1.0.0",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/temelyos/config.git"
+	},
+	"type": "module",
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"files": [
+		"./dist",
+		"./LICENSE",
+		"./package.json",
+		"./README.md"
+	],
+	"scripts": {
+		"build": "node ../../scripts/build.mjs && tsc --project tsconfig.build.json",
+		"deploy": "npm run build && node ../../scripts/publish.mjs"
+	},
+	"devDependencies": {
+		"oxlint": "catalog:oxlint",
+		"typescript": "catalog:"
+	},
+	"dependencies": {
+		"@stylistic/eslint-plugin": "catalog:eslint",
+		"@temelyos/tsconfig": "workspace:^",
+		"eslint-plugin-perfectionist": "catalog:eslint"
+	},
+	"peerDependencies": {
+		"oxlint": "catalog:oxlint",
+		"oxlint-tsgolint": "catalog:oxlint"
+	},
+	"peerDependenciesMeta": {
+		"oxlint-tsgolint": {
+			"optional": true
+		}
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}
