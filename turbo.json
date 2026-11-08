@@ -3,17 +3,40 @@
 	"ui": "tui",
 	"tasks": {
 		"build": {
-			"dependsOn": ["^build"],
-			"inputs": ["$TURBO_DEFAULT$", ".env*"],
-			"outputs": ["dist/**"]
+			"dependsOn": [
+				"^build"
+			],
+			"inputs": [
+				"$TURBO_DEFAULT$",
+				".env*"
+			],
+			"outputs": [
+				"dist/**"
+			]
 		},
-    "lint": {
-      "dependsOn": ["@temelyos/oxlint-config#build"],
-      "outputs": []
-    },
-    "lint:fix": {
-      "dependsOn": ["@temelyos/oxlint-config#build"],
-      "outputs": []
-    }
+		"lint": {
+			"dependsOn": [
+				"@temelyos/oxlint-config#build"
+			],
+			"outputs": []
+		},
+		"lint:fix": {
+			"dependsOn": [
+				"@temelyos/oxlint-config#build"
+			],
+			"outputs": []
+		},
+		"test": {
+			"dependsOn": [
+				"^build"
+			],
+			"outputs": []
+		},
+		"type-check": {
+			"dependsOn": [
+				"^build"
+			],
+			"outputs": []
+		}
 	}
 }

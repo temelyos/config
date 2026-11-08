@@ -3,9 +3,9 @@
 	"version": "1.0.40",
 	"license": "MIT",
 	"repository": {
-    "type": "git",
-    "url": "git+https://github.com/temelyos/config.git"
-  },
+		"type": "git",
+		"url": "git+https://github.com/temelyos/config.git"
+	},
 	"type": "module",
 	"main": "./dist/index.js",
 	"module": "./dist/index.js",
@@ -41,6 +41,7 @@
 		"@eslint/js": "catalog:eslint",
 		"@stylistic/eslint-plugin": "catalog:eslint",
 		"@temelyos/tsconfig": "workspace:^",
+		"@typescript-eslint/parser": "catalog:eslint",
 		"eslint": "catalog:eslint",
 		"eslint-plugin-import": "catalog:eslint",
 		"eslint-plugin-perfectionist": "catalog:eslint",
