@@ -1,6 +1,6 @@
 {
 	"name": "@temelyos/config",
-	"packageManager": "pnpm@9.7.0",
+	"packageManager": "pnpm@10.25.0",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/temelyos/config.git"
