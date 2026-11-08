@@ -1,5 +1,5 @@
 {
-	"name": "@temelyos/config",
+	"name": "@temelyos/tooling",
 	"packageManager": "pnpm@10.25.0",
 	"repository": {
 		"type": "git",

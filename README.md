@@ -1,8 +1,8 @@
-# @temelyos/config
+# @temelyos/tooling
 
-> 🛠 Unified configuration package for all Temelyos projects
+> 🛠 Shared tooling for all Temelyos projects: configuration and lint rules
 
-This monorepo config package bundles and exposes shared configurations for:
+This monorepo publishes the shared tooling every Temelyos workspace builds and lints with:
 
 - ✅ ESLint
 - ✅ TypeScript
