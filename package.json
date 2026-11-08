@@ -3,7 +3,7 @@
 	"packageManager": "pnpm@10.25.0",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/temelyos/config.git"
+		"url": "git+https://github.com/temelyos/tooling.git"
 	},
 	"scripts": {
 		"build": "turbo run build",

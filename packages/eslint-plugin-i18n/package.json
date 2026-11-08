@@ -6,7 +6,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/temelyos/config.git",
+		"url": "git+https://github.com/temelyos/tooling.git",
 		"directory": "packages/eslint-plugin-i18n"
 	},
 	"type": "module",
