@@ -2,19 +2,23 @@
 	"name": "@temelyos/config",
 	"packageManager": "pnpm@9.7.0",
 	"repository": {
-    "type": "git",
-    "url": "git+https://github.com/temelyos/config.git"
-  },
+		"type": "git",
+		"url": "git+https://github.com/temelyos/config.git"
+	},
 	"scripts": {
 		"build": "turbo run build",
 		"clean": "node scripts/clean.mjs",
-		"deploy": "npm run deploy:tsconfig && npm run deploy:eslint-config && npm run deploy:oxlint-config",
+		"deploy": "npm run deploy:tsconfig && npm run deploy:eslint-config && npm run deploy:oxlint-config && npm run deploy:eslint-plugin-i18n && npm run deploy:eslint-plugin-repository",
 		"deploy:eslint-config": "cd packages/eslint-config && npm run deploy",
+		"deploy:eslint-plugin-i18n": "cd packages/eslint-plugin-i18n && npm run deploy",
+		"deploy:eslint-plugin-repository": "cd packages/eslint-plugin-repository && npm run deploy",
 		"deploy:oxlint-config": "cd packages/oxlint-config && npm run deploy",
 		"deploy:tsconfig": "cd packages/tsconfig && npm run deploy",
 		"lint": "turbo run lint",
 		"lint:fix": "turbo run lint:fix",
-		"prune": "node scripts/prune.mjs"
+		"prune": "node scripts/prune.mjs",
+		"test": "turbo run test",
+		"type-check": "turbo run type-check"
 	},
 	"devDependencies": {
 		"@temelyos/oxlint-config": "workspace:^",
