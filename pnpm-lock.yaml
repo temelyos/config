@@ -147,25 +147,6 @@ importers:
         specifier: 'catalog:'
         version: 7.0.2
 
-  packages/eslint-plugin-repository:
-    dependencies:
-      '@typescript-eslint/utils':
-        specifier: catalog:eslint
-        version: 8.72.1(eslint@9.39.5)(typescript@7.0.2)
-    devDependencies:
-      '@oxlint/plugins':
-        specifier: catalog:oxlint
-        version: 1.92.0
-      '@temelyos/tsconfig':
-        specifier: workspace:^
-        version: link:../tsconfig
-      oxlint:
-        specifier: catalog:oxlint
-        version: 1.92.0(oxlint-tsgolint@7.0.2006)
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
   packages/oxlint-config:
     dependencies:
       '@stylistic/eslint-plugin':
